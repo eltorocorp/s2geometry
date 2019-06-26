@@ -7,6 +7,9 @@ jobs:
       - checkout
 
       - run:
+          name: deps
+          command: apt install -y cmake libssl-dev
+      - run:
           name: build
           command: |
                   cmake -H. -Bbuild
