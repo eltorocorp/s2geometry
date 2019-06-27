@@ -10,13 +10,13 @@ workflow "Release" {
 
 
 action "generate build files" {
-  uses = "./.github/actions/cmake"
+  uses = "./.github/actions/ubuntu-cmake"
   args = " -H. -Bbuild"
 }
 
 action "build" {
   needs = ["generate build files"]
-  uses = "./.github/actions/cmake"
+  uses = "./.github/actions/ubuntu-cmake"
   args = " --build build"
 }
 
