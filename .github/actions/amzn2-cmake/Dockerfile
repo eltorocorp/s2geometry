@@ -9,7 +9,7 @@ LABEL "repository"="http://github.com/eltorocorp/s2geometry"
 LABEL "homepage"="http://github.com/actions"
 LABEL "maintainer"="Loki Coyote <lokkju@gmail.com>"
 
-RUN yum install -y cmake make gcc gcc-c++ openssl-devel gtest-devel
+RUN yum install -y cmake3 make gcc gcc-c++ openssl-devel gtest-devel rpm-build
 
 ADD entrypoint.sh /entrypoint.sh
 

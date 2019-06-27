@@ -5,46 +5,48 @@ workflow "Build" {
 
 workflow "Release" {
   on = "release"
-  resolves = ["ghr-upload-deb","ghr-upload-rpm"]
+  resolves = ["release"]
 }
 
 
-action "generate build files" {
-  uses = "./.github/actions/ubuntu-cmake"
-  args = " -H. -Bbuild"
+action "ubnt.buildgen" {
+  uses = "./.github/actions/ubnt-cmake"
+  args = " -H. -Bbuild.ubnt"
+}
+action "amzn2.buildgen" {
+  uses = "./.github/actions/amzn2-cmake"
+  args = " -H. -Bbuild.amzn2"
 }
 
 action "build" {
-  needs = ["generate build files"]
-  uses = "./.github/actions/ubuntu-cmake"
-  args = " --build build"
+  needs = ["ubnt.buildgen"]
+  uses = "./.github/actions/ubnt-cmake"
+  args = " --build build.ubnt"
 }
 
-action "package-deb" {
-  needs = ["generate build files"]
-  uses = "./.github/actions/ubuntu-cmake"
-  args = " --clean-first --build build --target package"
+action "ubnt.package" {
+  needs = ["ubnt.buildgen"]
+  uses = "./.github/actions/ubnt-cmake"
+  args = " --build build.ubnt --target package"
 }
 
-action "package-rpm" {
-  needs = ["generate build files"]
+action "amzn2.package" {
+  needs = ["amzn2.buildgen"]
   uses = "./.github/actions/amzn2-cmake"
-  args = " --clean-first --build build --target package"
+  args = " --build build.amzn2 --target package"
 }
 
-action "ghr-upload-deb" {
-  uses = "fnkr/github-action-ghr@v1"
-  needs = ["package-deb"]
-  secrets = ["GITHUB_TOKEN"]
-  env = {
-    GHR_PATH = "build/*.deb"
-  }
+action "release.collect" {
+  uses = "actions/bin/sh@master"
+  args = ["mkdir -p dist","cp build.*/*.rpm dist/","cp build.*/*.deb dist/"]
+  needs = ["ubnt.package","amzn2.package"]
 }
-action "ghr-upload-rpm" {
+
+action "release" {
   uses = "fnkr/github-action-ghr@v1"
-  needs = ["package-rpm"]
+  needs = ["release.collect"]
   secrets = ["GITHUB_TOKEN"]
   env = {
-    GHR_PATH = "build/*.rpm"
+    GHR_PATH = "dist/"
   }
 }

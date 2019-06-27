@@ -1,3 +1,3 @@
 #!/bin/sh -l
 
-sh -c "cmake $*"
+sh -c "cmake3 $*"
