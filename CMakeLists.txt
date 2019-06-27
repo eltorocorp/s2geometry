@@ -64,6 +64,9 @@ if (WITH_GFLAGS)
     add_definitions(-DS2_USE_GFLAGS)
 endif()
 
+enable_testing()
+find_package(GTest)
+
 find_package(OpenSSL REQUIRED)
 # pthreads isn't used directly, but this is still required for std::thread.
 find_package(Threads REQUIRED)
@@ -435,10 +438,10 @@ install(FILES src/s2/util/units/length-units.h
         COMPONENT dev)
 install(TARGETS s2 DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT lib)
 
-message("GTEST_ROOT: ${GTEST_ROOT}")
-if (${GTEST_ROOT})
+if (GTEST_FOUND)
+  message("GTEST_ROOT: ${GTEST_ROOT}")
   add_subdirectory(${GTEST_ROOT} build_gtest)
-  include_directories(${GTEST_ROOT}/include)
+  include_directories(${GTEST_INCLUDE_DIRS})
 
   set(S2TestFiles
       src/s2/encoded_s2cell_id_vector_test.cc
