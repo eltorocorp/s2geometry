@@ -12,6 +12,7 @@ include(FindPackageHandleStandardArgs)
 include(GNUInstallDirs)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 # Avoid "Policy CMP0042 is not set" warning on macOS.
 if (APPLE)
     set(CMAKE_MACOSX_RPATH TRUE)
@@ -24,6 +25,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/third_party/cmake")
+include(SystemSpecificInformations)
 
 option(WITH_GFLAGS "Use gflags to change command line flags." OFF)
 add_feature_info(GFLAGS WITH_GFLAGS
@@ -39,7 +41,8 @@ add_feature_info(SHARED_LIBS BUILD_SHARED_LIBS
                  "builds shared libraries instead of static.")
 
 option(BUILD_PYTHON "Build Python bindings with SWIG." ON)
-option(BUILD_EXAMPLES "Build s2 documentation examples." ON)
+option(BUILD_TESTS "Build s2 tests." OFF)
+cmake_dependent_option(BUILD_EXAMPLES "Build s2 documentation examples." ON "BUILD_TESTS" OFF)
 
 feature_summary(WHAT ALL)
 
@@ -63,9 +66,6 @@ if (WITH_GFLAGS)
     endif()
     add_definitions(-DS2_USE_GFLAGS)
 endif()
-
-enable_testing()
-find_package(GTest)
 
 find_package(OpenSSL REQUIRED)
 # pthreads isn't used directly, but this is still required for std::thread.
@@ -438,9 +438,9 @@ install(FILES src/s2/util/units/length-units.h
         COMPONENT dev)
 install(TARGETS s2 DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT lib)
 
-if (GTEST_FOUND)
-  message("GTEST_ROOT: ${GTEST_ROOT}")
-  add_subdirectory(${GTEST_ROOT} build_gtest)
+if (BUILD_TESTS)
+  enable_testing()
+  find_package(GTest)
   include_directories(${GTEST_INCLUDE_DIRS})
 
   set(S2TestFiles
@@ -557,7 +557,7 @@ if (GTEST_FOUND)
     add_executable(${test} ${test_cc})
     target_link_libraries(
         ${test}
-        s2testing s2 gtest_main)
+        s2testing s2 ${GTEST_BOTH_LIBRARIES})
     add_test(${test} ${test})
   endforeach()
 
@@ -596,8 +596,6 @@ elseif(${CPACK_GENERATOR} MATCHES "RPM")
   set(CPACK_RPM_MAIN_COMPONENT lib)
   set(CPACK_RPM_PACKAGE_GROUP "devel")
   set(CPACK_RPM_PACKAGE_REQUIRES "libssl-dev >= 1.1.1")
-else()
-  set(CPACK_GENERATOR "TGZ")
 endif()
 
 include(CPack)
